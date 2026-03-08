@@ -5,11 +5,28 @@ import (
 	"testing"
 
 	"github.com/simonecolaci/subito-assignment/internal/entity"
+	"github.com/simonecolaci/subito-assignment/internal/repository"
 	"github.com/simonecolaci/subito-assignment/internal/service"
 )
 
+func newTestProductService(t *testing.T) service.ProductService {
+	t.Helper()
+
+	db, err := repository.NewSQLiteDB(":memory:")
+	if err != nil {
+		t.Fatalf("failed to create in-memory database: %v", err)
+	}
+
+	r, err := repository.NewSQLiteProductRepository(db)
+	if err != nil {
+		t.Fatalf("failed to create product repository: %v", err)
+	}
+
+	return service.NewProductService(r)
+}
+
 func TestProductService_Create(t *testing.T) {
-	s := service.NewProductService()
+	s := newTestProductService(t)
 
 	p := &entity.Product{
 		Name:        "Test Product",
@@ -33,7 +50,7 @@ func TestProductService_Create(t *testing.T) {
 }
 
 func TestProductService_Create_InvalidInput(t *testing.T) {
-	s := service.NewProductService()
+	s := newTestProductService(t)
 
 	p := &entity.Product{
 		Description: "This is a test product",
@@ -48,7 +65,12 @@ func TestProductService_Create_InvalidInput(t *testing.T) {
 }
 
 func TestProductService_GetByID(t *testing.T) {
-	s := service.NewProductService()
+	s := newTestProductService(t)
+
+	_, err := s.Create(&entity.Product{Name: "Product 1", Description: "Description 1", Price: 10000, VATRate: 0.22})
+	if err != nil {
+		t.Fatalf("failed to create product: %v", err)
+	}
 
 	p, err := s.GetByID(1)
 	if err != nil {
@@ -65,7 +87,7 @@ func TestProductService_GetByID(t *testing.T) {
 }
 
 func TestProductService_GetByID_NotFound(t *testing.T) {
-	s := service.NewProductService()
+	s := newTestProductService(t)
 
 	_, err := s.GetByID(0)
 	if !errors.Is(err, entity.ErrNotFound) {
@@ -74,7 +96,19 @@ func TestProductService_GetByID_NotFound(t *testing.T) {
 }
 
 func TestProductService_List(t *testing.T) {
-	s := service.NewProductService()
+	s := newTestProductService(t)
+
+	productsToCreate := []entity.Product{
+		{Name: "Product 1", Description: "Description 1", Price: 10000, VATRate: 0.22},
+		{Name: "Product 2", Description: "Description 2", Price: 15000, VATRate: 0.22},
+		{Name: "Product 3", Description: "Description 3", Price: 20000, VATRate: 0.22},
+	}
+
+	for i := range productsToCreate {
+		if _, err := s.Create(&productsToCreate[i]); err != nil {
+			t.Fatalf("failed to create product: %v", err)
+		}
+	}
 
 	products, err := s.List()
 	if err != nil {
@@ -83,5 +117,18 @@ func TestProductService_List(t *testing.T) {
 
 	if len(products) != 3 {
 		t.Errorf("expected 3 products, got %d", len(products))
+	}
+}
+
+func TestProductService_List_Empty(t *testing.T) {
+	s := newTestProductService(t)
+
+	products, err := s.List()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(products) != 0 {
+		t.Errorf("expected 0 products, got %d", len(products))
 	}
 }

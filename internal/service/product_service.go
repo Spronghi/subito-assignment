@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/simonecolaci/subito-assignment/internal/entity"
+	"github.com/simonecolaci/subito-assignment/internal/repository"
 )
 
 type ProductService interface {
@@ -13,10 +14,11 @@ type ProductService interface {
 }
 
 type productService struct {
+	productRepository repository.ProductRepository
 }
 
-func NewProductService() ProductService {
-	return &productService{}
+func NewProductService(productRepository repository.ProductRepository) ProductService {
+	return &productService{productRepository: productRepository}
 }
 
 func (s *productService) Create(p *entity.Product) (*entity.Product, error) {
@@ -24,34 +26,15 @@ func (s *productService) Create(p *entity.Product) (*entity.Product, error) {
 		return nil, err
 	}
 
-	// TODO: call the repository
-	p.ID = 1
-
-	return p, nil
+	return s.productRepository.Create(p)
 }
 
 func (s *productService) GetByID(id int64) (*entity.Product, error) {
-	if id == 0 {
-		return nil, entity.ErrNotFound
-	}
-
-	// TODO: call the repository
-	return &entity.Product{
-		ID:          id,
-		Name:        fmt.Sprintf("Product %d", id),
-		Description: fmt.Sprintf("Description for product %d", id),
-		Price:       10000 + id*1000,
-		VATRate:     0.22,
-	}, nil
+	return s.productRepository.GetByID(id)
 }
 
 func (s *productService) List() ([]*entity.Product, error) {
-	// TODO: call the repository
-	return []*entity.Product{
-		{ID: 1, Name: "Product 1", Description: "Description for product 1", Price: 10000, VATRate: 0.22},
-		{ID: 2, Name: "Product 2", Description: "Description for product 2", Price: 11000, VATRate: 0.22},
-		{ID: 3, Name: "Product 3", Description: "Description for product 3", Price: 12000, VATRate: 0.22},
-	}, nil
+	return s.productRepository.List()
 }
 
 func validateProduct(p *entity.Product) error {

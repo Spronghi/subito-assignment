@@ -9,13 +9,28 @@ import (
 
 	"github.com/simonecolaci/subito-assignment/internal/entity"
 	"github.com/simonecolaci/subito-assignment/internal/handler"
+	"github.com/simonecolaci/subito-assignment/internal/repository"
 	"github.com/simonecolaci/subito-assignment/internal/service"
 )
 
 func newTestProductMux(t *testing.T) *http.ServeMux {
 	t.Helper()
 
-	productService := service.NewProductService()
+	db, err := repository.NewSQLiteDB(":memory:")
+	if err != nil {
+		t.Fatalf("failed to create in-memory database: %v", err)
+	}
+
+	productRepo, err := repository.NewSQLiteProductRepository(db)
+	if err != nil {
+		t.Fatalf("failed to create product repository: %v", err)
+	}
+
+	if err := productRepo.Populate(); err != nil {
+		t.Fatalf("failed to populate product repository: %v", err)
+	}
+
+	productService := service.NewProductService(productRepo)
 
 	mux := http.NewServeMux()
 

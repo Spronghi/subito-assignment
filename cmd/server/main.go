@@ -1,22 +1,20 @@
 package main
 
 import (
-	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/simonecolaci/subito-assignment/internal/handler"
+	"github.com/simonecolaci/subito-assignment/internal/repository"
 	"github.com/simonecolaci/subito-assignment/internal/service"
-
-	_ "modernc.org/sqlite"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
 
-	db, err := sql.Open("sqlite", ":memory:")
+	db, err := repository.NewSQLiteDB(":memory:")
 
 	if err != nil {
 		slog.Error("Failed to initialize database", "err", err)
@@ -29,7 +27,18 @@ func main() {
 		}
 	}()
 
-	productService := service.NewProductService()
+	productRepo, err := repository.NewSQLiteProductRepository(db)
+	if err != nil {
+		slog.Error("Failed to initialize product repository", "err", err)
+		os.Exit(1)
+	}
+
+	if err := productRepo.Populate(); err != nil {
+		slog.Error("Failed to populate product repository", "err", err)
+		os.Exit(1)
+	}
+
+	productService := service.NewProductService(productRepo)
 
 	// TODO: handle graceful shutdown by listening to OS signals in a separate goroutine
 	mux := http.NewServeMux()
