@@ -1,16 +1,32 @@
 package main
 
 import (
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/simonecolaci/subito-assignment/internal/handler"
+
+	_ "modernc.org/sqlite"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
+
+	db, err := sql.Open("sqlite", ":memory:")
+
+	if err != nil {
+		slog.Error("Failed to initialize database", "err", err)
+		os.Exit(1)
+	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			slog.Error("Failed to close database", "err", err)
+		}
+	}()
 
 	mux := http.NewServeMux()
 
