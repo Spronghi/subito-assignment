@@ -1,6 +1,6 @@
 .PHONY: dev test
 
-dev:
+serve-watch:
 	air
-test:
+test-watch:
 	gotestsum --watch
