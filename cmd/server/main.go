@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/simonecolaci/subito-assignment/internal/handler"
+	"github.com/simonecolaci/subito-assignment/internal/service"
 
 	_ "modernc.org/sqlite"
 )
@@ -28,12 +29,17 @@ func main() {
 		}
 	}()
 
+	productService := service.NewProductService()
+
+	// TODO: handle graceful shutdown by listening to OS signals in a separate goroutine
 	mux := http.NewServeMux()
 
 	handler.NewHealthHandler().RegisterRoutes(mux)
+	handler.NewProductHandler(productService).RegisterRoutes(mux)
 
 	slog.Info("Starting server on :8080")
 
+	// TODO: check for proper server configuration (e.g., timeouts)
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		slog.Error("Server failed to start", "err", err)
 		os.Exit(1)

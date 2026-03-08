@@ -1,9 +1,11 @@
-package handler
+package handler_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/simonecolaci/subito-assignment/internal/handler"
 )
 
 func newTestHealthMux(t *testing.T) *http.ServeMux {
@@ -11,7 +13,7 @@ func newTestHealthMux(t *testing.T) *http.ServeMux {
 
 	mux := http.NewServeMux()
 
-	NewHealthHandler().RegisterRoutes(mux)
+	handler.NewHealthHandler().RegisterRoutes(mux)
 
 	return mux
 }
