@@ -14,20 +14,15 @@ type Product struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-func (p *Product) VATAmount() (int64, error) {
-	// TODO: not sure how to handle negative prices, for now we'll throw an error, but maybe we should just return the price without VAT
+func (p *Product) VATAmount() int64 {
+	// TODO: not sure how to handle negative prices, for now we'll just return 0
 	if p.Price < 0 {
-		return 0, DataInconsistency
+		return 0
 	}
 
-	return int64(float64(p.Price) * p.VATRate), nil
+	return int64(float64(p.Price) * p.VATRate)
 }
 
-func (p *Product) TotalPrice() (int64, error) {
-	vatAmount, err := p.VATAmount()
-	if err != nil {
-		return 0, err
-	}
-
-	return p.Price + vatAmount, nil
+func (p *Product) TotalPrice() int64 {
+	return p.Price + p.VATAmount()
 }
