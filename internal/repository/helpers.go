@@ -13,3 +13,7 @@ func NewSQLiteDB(dsn string) (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+type scanner interface {
+	Scan(dest ...any) error
+}

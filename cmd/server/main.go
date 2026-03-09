@@ -39,13 +39,26 @@ func main() {
 		os.Exit(1)
 	}
 
+	orderRepo, err := repository.NewSQLiteOrderRepository(db)
+	if err != nil {
+		slog.Error("Failed to initialize order repository", "err", err)
+		os.Exit(1)
+	}
+
+	if err := orderRepo.Populate(); err != nil {
+		slog.Error("Failed to populate order repository", "err", err)
+		os.Exit(1)
+	}
+
 	productService := service.NewProductService(productRepo)
+	orderService := service.NewOrderService(orderRepo, productRepo)
 
 	// TODO: handle graceful shutdown by listening to OS signals in a separate goroutine
 	mux := http.NewServeMux()
 
 	handler.NewHealthHandler().RegisterRoutes(mux)
 	handler.NewProductHandler(productService).RegisterRoutes(mux)
+	handler.NewOrderHandler(orderService).RegisterRoutes(mux)
 
 	slog.Info("Starting server on :8080")
 

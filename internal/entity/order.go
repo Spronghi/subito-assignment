@@ -56,6 +56,22 @@ func (oi OrderItem) Validate() error {
 	return nil
 }
 
+func (no NewOrder) Validate() error {
+	if len(no.Items) == 0 {
+		return fmt.Errorf("%w: order must have at least one item", ErrInvalidInput)
+	}
+	for _, item := range no.Items {
+		if item.Quantity <= 0 {
+			return fmt.Errorf("quantity must be greater than 0: %w", ErrInvalidInput)
+		}
+
+		if item.ProductID == 0 {
+			return fmt.Errorf("product ID must be set: %w", ErrInvalidInput)
+		}
+	}
+	return nil
+}
+
 func (o Order) CalculateTotalPrice() int64 {
 	var total int64
 	for _, item := range o.Items {

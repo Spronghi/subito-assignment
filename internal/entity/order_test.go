@@ -50,6 +50,59 @@ func TestOrder_Validate(t *testing.T) {
 	}
 }
 
+func TestOrder_NewOrder_Validate(t *testing.T) {
+	tests := []struct {
+		name    string
+		order   *entity.NewOrder
+		wantErr bool
+	}{
+		{
+			name: "valid new order",
+			order: &entity.NewOrder{
+				Items: []entity.NewOrderItem{
+					{ProductID: 1, Quantity: 2},
+					{ProductID: 2, Quantity: 1},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty items",
+			order: &entity.NewOrder{
+				Items: []entity.NewOrderItem{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "negative quantity",
+			order: &entity.NewOrder{
+				Items: []entity.NewOrderItem{
+					{ProductID: 1, Quantity: -1},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "zero quantity",
+			order: &entity.NewOrder{
+				Items: []entity.NewOrderItem{
+					{ProductID: 1, Quantity: 0},
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.order.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("expected error: %v, got %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
 func TestOrder_CalculateTotalPrice(t *testing.T) {
 	order := &entity.Order{
 		Items: []entity.OrderItem{
