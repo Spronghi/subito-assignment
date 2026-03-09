@@ -31,7 +31,6 @@ func NewSQLiteOrderRepository(db *sql.DB) (*SQLiteOrderRepository, error) {
 	if err != nil {
 		return nil, err
 	}
-	// NOTE: SQLite in-memory doesn't support foreign keys by default
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS order_items (
 		id           INTEGER PRIMARY KEY AUTOINCREMENT,
 		order_id     INTEGER NOT NULL REFERENCES orders(id),

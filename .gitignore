@@ -28,3 +28,6 @@ build-errors.log
 
 # OS
 .DS_Store
+
+# build
+bin
