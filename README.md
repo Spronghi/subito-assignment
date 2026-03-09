@@ -87,6 +87,48 @@ DELETE /orders/{id} - delete an order (not yet implemented)
 
 The APIs are designed to give the consumer less flexibility on how to manage the order itself. The consumer, while creating the order, can only specify the product to include and the quantity of items, the rest is calculated by the backend when creating an order.
 
+### Examples
+
+**List products**
+
+```sh
+curl http://localhost:8080/products
+```
+
+**Get a product by id**
+
+```sh
+curl http://localhost:8080/products/1
+```
+
+**Create a product**
+
+```sh
+curl -X POST http://localhost:8080/products \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Keyboard","description":"Mechanical keyboard","price":15000,"vat_rate":0.22}'
+```
+
+**List orders**
+
+```sh
+curl http://localhost:8080/orders
+```
+
+**Get an order by id**
+
+```sh
+curl http://localhost:8080/orders/1
+```
+
+**Create an order**
+
+```sh
+curl -X POST http://localhost:8080/orders \
+  -H "Content-Type: application/json" \
+  -d '{"items":[{"product_id":1,"quantity":1},{"product_id":3,"quantity":2}]}'
+```
+
 ### Considerations
 
 Another possible structure would have exposed the CRUD apis for `/orders` and `/orders/{id}/items`, this would have required more time but it's more in line with the RESTful approach, that divides the entity on different APIs to give the consumer more flexibility on the usage.
