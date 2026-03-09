@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -25,4 +26,17 @@ func (p *Product) VATAmount() int64 {
 
 func (p *Product) TotalPrice() int64 {
 	return p.Price + p.VATAmount()
+}
+
+func (p *Product) Validate() error {
+	if p.Name == "" {
+		return fmt.Errorf("%w: name is required", ErrInvalidInput)
+	}
+	if p.Price < 0 {
+		return fmt.Errorf("%w: price must be >= 0", ErrInvalidInput)
+	}
+	if p.VATRate < 0 {
+		return fmt.Errorf("%w: vat_rate must be >= 0", ErrInvalidInput)
+	}
+	return nil
 }

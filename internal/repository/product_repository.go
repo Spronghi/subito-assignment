@@ -21,6 +21,7 @@ type SQLiteProductRepository struct {
 }
 
 func NewSQLiteProductRepository(db *sql.DB) (*SQLiteProductRepository, error) {
+	// TODO: move this on a separate migration package and run it at application startup, this way we can also handle schema migrations in the future
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS products (
 		id          INTEGER PRIMARY KEY AUTOINCREMENT,
 		name        TEXT    NOT NULL,
@@ -103,11 +104,7 @@ func (r *SQLiteProductRepository) Create(p *entity.Product) (*entity.Product, er
 	return r.GetByID(id)
 }
 
-type productScanner interface {
-	Scan(dest ...any) error
-}
-
-func scanProduct(s productScanner) (*entity.Product, error) {
+func scanProduct(s scanner) (*entity.Product, error) {
 	var p entity.Product
 	err := s.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.VATRate, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
