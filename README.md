@@ -57,14 +57,15 @@ Builds the Docker image and runs all tests inside the container.
 
 ### Without Docker
 
-| Command            | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| `make build`       | Build the binary to `bin/server`                   |
-| `make serve`       | Start the server                                   |
-| `make serve-watch` | Start the server with live reload (requires `air`) |
-| `make test`        | Run all tests                                      |
-| `make test-watch`  | Run tests in watch mode (requires `gotestsum`)     |
-| `make lint`        | Run the linter (requires `golangci-lint`)          |
+| Command              | Description                                        |
+| -------------------- | -------------------------------------------------- |
+| `make build`         | Build the binary to `bin/server`                   |
+| `make serve`         | Start the server                                   |
+| `make serve-watch`   | Start the server with live reload (requires `air`) |
+| `make test`          | Run all tests                                      |
+| `make test-no-cache` | Run all tests bypassing the cache                  |
+| `make test-watch`    | Run tests in watch mode (requires `gotestsum`)     |
+| `make lint`          | Run the linter (requires `golangci-lint`)          |
 
 ## APIs
 
