@@ -75,14 +75,14 @@ The server exposes the following APIs:
 GET /products - get all the available products
 GET /products/{id} - get a product by id
 POST /products - create a new product
-PUT /products/{id} - update a product (not yet implemented)
-DELETE /products/{id} - delete a product (not yet implemented)
+PUT /products/{id} - update a product
+DELETE /products/{id} - delete a product
 
 GET /orders - get all the available orders
 GET /orders/{id} - get an order by id
 POST /orders - create a new order
-PUT /orders/{id} - update an order (not yet implemented)
-DELETE /orders/{id} - delete an order (not yet implemented)
+PUT /orders/{id} - update an order
+DELETE /orders/{id} - delete an order
 ```
 
 The APIs are designed to give the consumer less flexibility on how to manage the order itself. The consumer, while creating the order, can only specify the product to include and the quantity of items, the rest is calculated by the backend when creating an order.

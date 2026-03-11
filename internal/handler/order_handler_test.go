@@ -149,3 +149,84 @@ func TestOrderHandler_List(t *testing.T) {
 		t.Fatalf("expected %d orders, got %d", 2, len(orders))
 	}
 }
+
+func TestOrderHandler_Update(t *testing.T) {
+	mux := newTestOrderMux(t)
+
+	body := `{"items":[{"product_id":1,"quantity":3}]}`
+	req := httptest.NewRequest("PUT", "/orders/1", bytes.NewBufferString(body))
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, rec.Code)
+	}
+
+	var order entity.Order
+	if err := json.NewDecoder(rec.Body).Decode(&order); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if len(order.Items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(order.Items))
+	}
+
+	if order.Items[0].Quantity != 3 {
+		t.Errorf("expected quantity 3, got %d", order.Items[0].Quantity)
+	}
+}
+
+func TestOrderHandler_Update_NotFound(t *testing.T) {
+	mux := newTestOrderMux(t)
+
+	body := `{"items":[{"product_id":1,"quantity":1}]}`
+	req := httptest.NewRequest("PUT", "/orders/999", bytes.NewBufferString(body))
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("Expected status code %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestOrderHandler_Update_BadRequest(t *testing.T) {
+	mux := newTestOrderMux(t)
+
+	body := `{"items":[]}`
+	req := httptest.NewRequest("PUT", "/orders/1", bytes.NewBufferString(body))
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Expected status code %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+}
+
+func TestOrderHandler_Delete(t *testing.T) {
+	mux := newTestOrderMux(t)
+
+	req := httptest.NewRequest("DELETE", "/orders/1", nil)
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestOrderHandler_Delete_NotFound(t *testing.T) {
+	mux := newTestOrderMux(t)
+
+	req := httptest.NewRequest("DELETE", "/orders/999", nil)
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("Expected status code %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}

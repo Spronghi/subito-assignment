@@ -243,3 +243,70 @@ func TestOrderService_Create_OrderItemInvalid(t *testing.T) {
 		t.Fatal("expected error, got nil")
 	}
 }
+
+func TestOrderService_Update(t *testing.T) {
+	s := newTestOrderService(t)
+
+	created, err := s.Create(&entity.NewOrder{
+		Items: []entity.NewOrderItem{{ProductID: 1, Quantity: 1}},
+	})
+	if err != nil {
+		t.Fatalf("failed to create order: %v", err)
+	}
+
+	updated, err := s.Update(created.ID, &entity.NewOrder{
+		Items: []entity.NewOrderItem{{ProductID: 2, Quantity: 3}},
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(updated.Items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(updated.Items))
+	}
+	if updated.Items[0].ProductID != 2 {
+		t.Errorf("expected product ID 2, got %d", updated.Items[0].ProductID)
+	}
+	if updated.Items[0].Quantity != 3 {
+		t.Errorf("expected quantity 3, got %d", updated.Items[0].Quantity)
+	}
+}
+
+func TestOrderService_Update_NotFound(t *testing.T) {
+	s := newTestOrderService(t)
+
+	_, err := s.Update(999, &entity.NewOrder{
+		Items: []entity.NewOrderItem{{ProductID: 1, Quantity: 1}},
+	})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestOrderService_Delete(t *testing.T) {
+	s := newTestOrderService(t)
+
+	created, err := s.Create(&entity.NewOrder{
+		Items: []entity.NewOrderItem{{ProductID: 1, Quantity: 1}},
+	})
+	if err != nil {
+		t.Fatalf("failed to create order: %v", err)
+	}
+
+	if err := s.Delete(created.ID); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	_, err = s.GetByID(created.ID)
+	if err == nil {
+		t.Fatal("expected order to be deleted, got nil error")
+	}
+}
+
+func TestOrderService_Delete_NotFound(t *testing.T) {
+	s := newTestOrderService(t)
+
+	if err := s.Delete(999); err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}

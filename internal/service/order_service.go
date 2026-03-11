@@ -11,6 +11,8 @@ type OrderService interface {
 	Create(o *entity.NewOrder) (*entity.Order, error)
 	GetByID(id int64) (*entity.Order, error)
 	List() ([]*entity.Order, error)
+	Update(id int64, o *entity.NewOrder) (*entity.Order, error)
+	Delete(id int64) error
 }
 
 type orderService struct {
@@ -65,4 +67,49 @@ func (s *orderService) GetByID(id int64) (*entity.Order, error) {
 
 func (s *orderService) List() ([]*entity.Order, error) {
 	return s.orderRepository.List()
+}
+
+func (s *orderService) Update(id int64, o *entity.NewOrder) (*entity.Order, error) {
+	if err := o.Validate(); err != nil {
+		return nil, err
+	}
+
+	existing, err := s.orderRepository.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	order := &entity.Order{
+		ID:        existing.ID,
+		CreatedAt: existing.CreatedAt,
+		Items:     make([]entity.OrderItem, 0, len(o.Items)),
+	}
+
+	for _, item := range o.Items {
+		product, err := s.productRepository.GetByID(item.ProductID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get product with id %d: %w", item.ProductID, entity.ErrNotFound)
+		}
+
+		orderItem := entity.OrderItem{
+			ProductID:   product.ID,
+			ProductName: product.Name,
+			Quantity:    item.Quantity,
+			UnitPrice:   product.Price,
+			VATRate:     product.VATRate,
+			Price:       product.Price * int64(item.Quantity),
+			VAT:         product.VATAmount() * int64(item.Quantity),
+		}
+
+		order.Items = append(order.Items, orderItem)
+	}
+
+	order.TotalPrice = order.CalculateTotalPrice()
+	order.TotalVAT = order.CalculateTotalVAT()
+
+	return s.orderRepository.Update(order)
+}
+
+func (s *orderService) Delete(id int64) error {
+	return s.orderRepository.Delete(id)
 }

@@ -14,6 +14,8 @@ type OrderRepository interface {
 	Create(o *entity.Order) (*entity.Order, error)
 	GetByID(id int64) (*entity.Order, error)
 	List() ([]*entity.Order, error)
+	Update(o *entity.Order) (*entity.Order, error)
+	Delete(id int64) error
 }
 
 type SQLiteOrderRepository struct {
@@ -168,6 +170,11 @@ func (r *SQLiteOrderRepository) Create(o *entity.Order) (*entity.Order, error) {
 	return o, nil
 }
 
+func (r *SQLiteOrderRepository) deleteOrderItemsByOrderID(orderID int64, tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM order_items WHERE order_id=?`, orderID)
+	return err
+}
+
 func (r *SQLiteOrderRepository) createOrderItems(items []entity.OrderItem, orderID int64, tx *sql.Tx) ([]entity.OrderItem, error) {
 	var createdItems []entity.OrderItem
 	for _, item := range items {
@@ -224,6 +231,79 @@ func (r *SQLiteOrderRepository) List() ([]*entity.Order, error) {
 	}
 
 	return orders, nil
+}
+
+func (r *SQLiteOrderRepository) Update(o *entity.Order) (*entity.Order, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+			slog.Error("Failed to rollback transaction", "err", err)
+		}
+	}()
+
+	result, err := tx.Exec(
+		`UPDATE orders SET total_price=?, total_vat=? WHERE id=?`,
+		o.TotalPrice, o.TotalVAT, o.ID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rows == 0 {
+		return nil, entity.ErrNotFound
+	}
+
+	if err := r.deleteOrderItemsByOrderID(o.ID, tx); err != nil {
+		return nil, err
+	}
+
+	createdItems, err := r.createOrderItems(o.Items, o.ID, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	o.Items = createdItems
+	return o, nil
+}
+
+func (r *SQLiteOrderRepository) Delete(id int64) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+			slog.Error("Failed to rollback transaction", "err", err)
+		}
+	}()
+
+	if err := r.deleteOrderItemsByOrderID(id, tx); err != nil {
+		return err
+	}
+
+	result, err := tx.Exec(`DELETE FROM orders WHERE id=?`, id)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return entity.ErrNotFound
+	}
+
+	return tx.Commit()
 }
 
 func scanOrder(s scanner) (*entity.Order, error) {

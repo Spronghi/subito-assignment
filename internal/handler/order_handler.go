@@ -21,6 +21,8 @@ func (h *OrderHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /orders", h.list)
 	mux.HandleFunc("GET /orders/{id}", h.getByID)
 	mux.HandleFunc("POST /orders", h.create)
+	mux.HandleFunc("PUT /orders/{id}", h.update)
+	mux.HandleFunc("DELETE /orders/{id}", h.delete)
 }
 
 func (h *OrderHandler) list(w http.ResponseWriter, r *http.Request) {
@@ -80,4 +82,53 @@ func (h *OrderHandler) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, order)
+}
+
+func (h *OrderHandler) update(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var input entity.NewOrder
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	order, err := h.service.Update(id, &input)
+	if errors.Is(err, entity.ErrNotFound) {
+		writeError(w, http.StatusNotFound, err)
+		return
+	}
+	if errors.Is(err, entity.ErrInvalidInput) {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, order)
+}
+
+func (h *OrderHandler) delete(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := h.service.Delete(id); errors.Is(err, entity.ErrNotFound) {
+		writeError(w, http.StatusNotFound, err)
+		return
+	} else if err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{})
 }

@@ -14,6 +14,8 @@ type ProductRepository interface {
 	Create(p *entity.Product) (*entity.Product, error)
 	GetByID(id int64) (*entity.Product, error)
 	List() ([]*entity.Product, error)
+	Update(p *entity.Product) (*entity.Product, error)
+	Delete(id int64) error
 }
 
 type SQLiteProductRepository struct {
@@ -102,6 +104,40 @@ func (r *SQLiteProductRepository) Create(p *entity.Product) (*entity.Product, er
 		return nil, err
 	}
 	return r.GetByID(id)
+}
+
+func (r *SQLiteProductRepository) Update(p *entity.Product) (*entity.Product, error) {
+	now := time.Now().UTC()
+	result, err := r.db.Exec(
+		`UPDATE products SET name=?, description=?, price=?, vat_rate=?, updated_at=? WHERE id=?`,
+		p.Name, p.Description, p.Price, p.VATRate, now, p.ID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rows == 0 {
+		return nil, entity.ErrNotFound
+	}
+	return r.GetByID(p.ID)
+}
+
+func (r *SQLiteProductRepository) Delete(id int64) error {
+	result, err := r.db.Exec(`DELETE FROM products WHERE id=?`, id)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return entity.ErrNotFound
+	}
+	return nil
 }
 
 func scanProduct(s scanner) (*entity.Product, error) {

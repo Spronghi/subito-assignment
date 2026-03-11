@@ -9,6 +9,8 @@ type ProductService interface {
 	Create(p *entity.Product) (*entity.Product, error)
 	GetByID(id int64) (*entity.Product, error)
 	List() ([]*entity.Product, error)
+	Update(id int64, p *entity.Product) (*entity.Product, error)
+	Delete(id int64) error
 }
 
 type productService struct {
@@ -33,4 +35,16 @@ func (s *productService) GetByID(id int64) (*entity.Product, error) {
 
 func (s *productService) List() ([]*entity.Product, error) {
 	return s.productRepository.List()
+}
+
+func (s *productService) Update(id int64, p *entity.Product) (*entity.Product, error) {
+	if err := p.Validate(); err != nil {
+		return nil, err
+	}
+	p.ID = id
+	return s.productRepository.Update(p)
+}
+
+func (s *productService) Delete(id int64) error {
+	return s.productRepository.Delete(id)
 }
