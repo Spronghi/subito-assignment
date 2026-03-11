@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"log/slog"
 	"testing"
 
 	"github.com/simonecolaci/subito-assignment/internal/entity"
@@ -61,8 +60,6 @@ func TestOrderService_Create(t *testing.T) {
 	if created.TotalVAT != 46200 {
 		t.Errorf("expected total VAT 35200, got %d", created.TotalVAT)
 	}
-
-	slog.Info("Created order", "order", created)
 
 	if len(created.Items) != len(newOrder.Items) {
 		t.Errorf("expected %d items, got %d", len(newOrder.Items), len(created.Items))
