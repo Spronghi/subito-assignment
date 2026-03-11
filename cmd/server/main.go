@@ -14,7 +14,7 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
 
-	//NOTE: using in-memory SQLite for simplicity, in a real application we would use a persistent database
+	//NOTE: using in-memory SQLite for simplicity, in a real application would use a persistent database
 	db, err := repository.NewSQLiteDB(":memory:")
 
 	if err != nil {
